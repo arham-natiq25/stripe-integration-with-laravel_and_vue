@@ -12,6 +12,7 @@ class Payment extends Model
         'user_id',
         'payment_id',
         'customer',
-        'last_4_digits'
+        'last_4_digits',
+        'card_type'
     ];
 }

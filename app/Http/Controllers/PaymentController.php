@@ -13,59 +13,49 @@ use Stripe\Stripe;
 class PaymentController extends Controller
 {
 
+
     function index(Request $request) {
+
         Stripe::setApiKey(config('stripe.stripe_sk'));
+        // coming from frontend as a token or method
         $paymentMethodId = $request->paymentMethodId;
+        // get Login User id to get user data / or use id from req to get data
         $user = User::where('id',$request->user_id)->first();
+        // Get data of customer from stripe against following paymentMethodId
         $paymentMethod = PaymentMethod::retrieve($paymentMethodId);
 
+        // Extract the brand of card 
+        $cardType = $paymentMethod->card->brand;
         // Extract the last four digits
         $lastFourDigits = $paymentMethod->card->last4;
-        // $myDatabasePaymentUser = Payment::where('user_id',$user->id)->first();
-        // dd($myDatabasePaymentUser);
-        // $paymentObject = Payment::where('user_id',$user->id)->get();
-        // $alreadyUsedId =$paymentObject->payment_id;
-        // dd($alreadyUsedId);
-        // $stripeCustomerRetrive = \Stripe\Customer::retrieve($paymentObject->customer);
-
-
-        // dd($alreadyUsedId);
-
-        // dd($request->all());
         try {
-
-            // Check if the user has a Stripe Customer ID
-
-                // If not, create a customer in Stripe and save the ID to your database
+                // create Stripe Customer in stripe 
                 $stripeCustomer = \Stripe\Customer::create([
                     'email' => $request->email,
                     'name'=>$request->name,
                     'payment_method' => $paymentMethodId,
-                //     // Add other customer information as needed
+               
                 ]);
+                // save record of card in database
                 Payment::create([
                     'user_id'=>$request->user_id,
                     'payment_id'=>$paymentMethodId,
                     'customer'=>$stripeCustomer->id,
                     'last_4_digits'=>$lastFourDigits,
-
+                    'card_type'=>$cardType
                   ]);
-
-
-            // Create a PaymentIntent
+            // Create a PaymentIntent and charge a payment
             $intent = PaymentIntent::create([
-                'payment_method' => $paymentMethodId,
+                'payment_method' => $paymentMethodId, // from frontend
                 'amount' => $request->payment*1000, // Set the amount to be charged (in cents)
-                'currency' => 'usd',
-                'confirmation_method' => 'manual',
-                'confirm' => true,
-                'return_url' => 'https://127.0.0.1:8000',
-                'customer' => $stripeCustomer,
+                'currency' => 'usd', 
+                'confirmation_method' => 'manual', // always manual
+                'confirm' => true, // always true,
+                'return_url' => 'https://127.0.0.1:8000', // necessary param
+                'customer' => $stripeCustomer, // customer data we cretaed in stripe also passes to payment so that payment is chraged
+                                              // for that customer
             ]);
-
-
             return response()->json(['success' => true, 'message' => 'Payment successfully Recieved']);
-
         }catch(\Exception $e){
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
 
@@ -73,7 +63,8 @@ class PaymentController extends Controller
     }
 
     function getCardOfLoginCustomer(){
-        $payment =Payment::all();
+        $user = Auth::user();
+        $payment =Payment::where('user_id',$user->id)->get();
         return response()->json($payment);
     }
     function payment_with_card(Request $request)  {

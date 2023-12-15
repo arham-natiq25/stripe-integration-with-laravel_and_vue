@@ -21,4 +21,3 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('customer/add-Member',[PaymentController::class,'index'])->name('payment');
 Route::post('customer/pay-with-card',[PaymentController::class,'payment_with_card'])->name('payment-with-card');
-Route::get('/cards',[PaymentController::class,'getCardOfLoginCustomer'])->name('cards');

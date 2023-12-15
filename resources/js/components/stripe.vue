@@ -14,7 +14,6 @@
             </div>
 
         </div>
-
         <div class="row">
             <div class="col-6">
                 <div class="form-group">
@@ -26,10 +25,8 @@
                 </div>
             </div>
         </div>
-
         <div class="row">
             <div class="col-md-6">
-
                 <div class="form-group">
                     <b>
                         <label for="card-number">Card Number</label>
@@ -38,8 +35,6 @@
                 </div>
             </div>
         </div>
-
-
         <div class="row">
             <div class="col-md-3">
                 <b>
@@ -54,9 +49,8 @@
                 <div id="card-cvc" class="form-control card-input"></div>
             </div>
         </div>
-
     </div>
-
+    <!-- ON CLICK OF SUBMIT SOME TASKS PERFORMS -->
     <button class="btn btn-success mt-3" @click="submit">Submit</button>
     <button class="btn btn-danger mt-3" >Pay with saved Cards</button>
 
@@ -65,7 +59,7 @@
             <div class="col-md-8">
                 <b><label for="">Select Card</label></b>
                 <select name="selectedCard" class="form-select" id="selectedCard" v-model="selectedCard">
-                    <option :value="card" v-for="card in cards" :key="card.id">****-****-****-{{card.last_4_digits}}</option>
+                    <option :value="card" v-for="card in cards" :key="card.id">**** **** **** {{card.last_4_digits}} <span class="ms-5">{{card.card_type}}</span></option>
                 </select>
             </div>
             <div class="col-md-3 mt-4">
@@ -100,13 +94,14 @@ export default {
         }
     },
     mounted() {
+        // FIRSTY STRIPE LOADS
         this.loadStripe();
         this.getCards();
         this.user_id=this.user.id
     },
     methods: {
         loadStripe() {
-            this.getCards();
+            // if current windonw has Stripe set primary key
             if (window.Stripe) {
                 this.stripe = window.Stripe("pk_test_51NUU03Emu0Ala7lxKFLz0kgK8mfOVQr99wlJMIDW39xzneQ0B6Zb2x9irWjjNuldkUYyDFQG11FE50M6px3wvrVx00A0milkpo");
                 this.elements = this.stripe.elements();
@@ -185,9 +180,9 @@ export default {
 
         },
         getCards() {
-        axios.get('/api/cards',{
+        axios.get('/cards',{
         }).then((res) => {
-            this.cards = res.data.filter((item)=>item.user_id === this.user_id);
+            this.cards = res.data
 
         }).catch((error) => {
             console.error('Error fetching cards:', error);
