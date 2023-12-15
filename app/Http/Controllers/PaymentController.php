@@ -24,37 +24,39 @@ class PaymentController extends Controller
         // Get data of customer from stripe against following paymentMethodId
         $paymentMethod = PaymentMethod::retrieve($paymentMethodId);
 
-        // Extract the brand of card 
+        // Extract the brand of card
         $cardType = $paymentMethod->card->brand;
         // Extract the last four digits
         $lastFourDigits = $paymentMethod->card->last4;
         try {
-                // create Stripe Customer in stripe 
+                // create Stripe Customer in stripe
                 $stripeCustomer = \Stripe\Customer::create([
                     'email' => $request->email,
                     'name'=>$request->name,
                     'payment_method' => $paymentMethodId,
-               
+
                 ]);
                 // save record of card in database
-                Payment::create([
-                    'user_id'=>$request->user_id,
-                    'payment_id'=>$paymentMethodId,
-                    'customer'=>$stripeCustomer->id,
-                    'last_4_digits'=>$lastFourDigits,
-                    'card_type'=>$cardType
-                  ]);
+              
             // Create a PaymentIntent and charge a payment
             $intent = PaymentIntent::create([
                 'payment_method' => $paymentMethodId, // from frontend
                 'amount' => $request->payment*1000, // Set the amount to be charged (in cents)
-                'currency' => 'usd', 
+                'currency' => 'usd',
                 'confirmation_method' => 'manual', // always manual
                 'confirm' => true, // always true,
                 'return_url' => 'https://127.0.0.1:8000', // necessary param
                 'customer' => $stripeCustomer, // customer data we cretaed in stripe also passes to payment so that payment is chraged
                                               // for that customer
             ]);
+            $chargeId = $intent->latest_charge;
+            Payment::create([
+                'user_id'=>$request->user_id,
+                'payment_id'=>$paymentMethodId,
+                'customer'=>$stripeCustomer->id,
+                'last_4_digits'=>$lastFourDigits,
+                'card_type'=>$cardType,
+              ]);
             return response()->json(['success' => true, 'message' => 'Payment successfully Recieved']);
         }catch(\Exception $e){
             return response()->json(['success' => false, 'message' => $e->getMessage()]);

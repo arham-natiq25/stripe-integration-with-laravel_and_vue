@@ -57,11 +57,17 @@
     <div>
         <div class="row">
             <div class="col-md-8">
-                <b><label for="">Select Card</label></b>
-                <select name="selectedCard" class="form-select" id="selectedCard" v-model="selectedCard">
-                    <option :value="card" v-for="card in cards" :key="card.id">**** **** **** {{card.last_4_digits}} <span class="ms-5">{{card.card_type}}</span></option>
-                </select>
+                <b><label>Select Card</label></b>
+
+                <div v-for="card in cards" :key="card.id">
+                    <input type="radio" :id="'card_' + card.id" name="selectedCard" class="m-2" :value="card" v-model="selectedCard">
+                    <label :for="'card_' + card.id" class="m-2">
+                        **** **** **** {{ card.last_4_digits }}
+                        <span class="ms-5">{{ card.card_type }}</span>
+                    </label>
+                </div>
             </div>
+
             <div class="col-md-3 mt-4">
                 <button class="btn btn-success" @click="payWithCard">Pay</button>
             </div>
